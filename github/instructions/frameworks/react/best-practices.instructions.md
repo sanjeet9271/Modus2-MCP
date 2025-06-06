@@ -37,61 +37,103 @@ src/
 4. **Prop Validation**: Use PropTypes or TypeScript for prop validation
 5. **Forward Refs**: Use forwardRef for components that need refs passed to them
 
-### Event Handling Pattern
 
-**ALWAYS** use this pattern for event handling:
+## Best Practice: Wrapping Components
 
-```jsx
-const buttonRef = useRef(null);
+When using Modus React Components directly, it is recommended to wrap them in corresponding React components within your application. This will abstract away from the library dependency, allowing more flexibility for you and your application in the future.
 
-useEffect(() => {
-  if (buttonRef.current) {
-    buttonRef.current.addEventListener('buttonClick', handleClick);
-    return () => {
-      buttonRef.current?.removeEventListener('buttonClick', handleClick);
-    };
-  }
-}, []);
+### Simple Wrapper Example
 
-const handleClick = (event) => {
-  // Handle event
+```tsx
+import React from 'react';
+import { ModusWcAvatar } from '@trimble-oss/moduswebcomponents-react';
+
+interface Props extends React.ComponentProps<typeof ModusWcAvatar> {}
+
+const Avatar: React.FC<Props> = (props) => {
+  return <ModusWcAvatar {...props} />;
 };
 
-return <ModusButton ref={buttonRef}>Button Text</ModusButton>;
+export default Avatar;
 ```
 
-## State Management
+### Advanced Wrapper Example
 
-### Local Component State
-- Use `useState` for component-specific state
-- Avoid prop drilling by extracting common state to context
+```tsx
+import React from 'react';
+import { ModusWcTextInput } from '@trimble-oss/moduswebcomponents-react';
 
-### Application State
-- Use React Context for shared state across components
-- Create separate contexts for different domains (e.g., navigation, authentication)
-- Implement context providers at the appropriate level of the component tree
+interface Props
+  extends Omit<React.ComponentProps<typeof ModusWcTextInput>, 'inputChange'> {
+  onValueChange: (value: string) => void;
+}
 
-## Routing
+const TextInput: React.FC<Props> = (props) => {
+  const handleInputChange = (
+    e: CustomEvent<HTMLModusWcTextInputElementEventMap['inputChange']>
+  ) => {
+    const value = e.detail.target.value;
+    props.onValueChange(value);
+  };
 
-- Use React Router for navigation
-- Define routes in a central location (`AppRoutes.tsx`)
-- Use layout components for consistent UI across routes
+  return <ModusWcTextInput {...props} onInputChange={handleInputChange} />;
+};
 
-## Component-Specific Guidelines
+export default TextInput;
+```
 
-### Navbar Implementation
-- Choose between `blue` and `default` variants
-- Use the correct logo URL based on variant:
-  - Blue variant: `https://modus-bootstrap.trimble.com/img/trimble-logo-rev.svg`
-  - Default variant: `https://modus.trimble.com/img/trimble-logo.svg`
-- Include hamburger menu and proper event handling
+## Benefits of Using React Wrappers
 
-### SideNavigation Implementation
-- Implement in Layout component for persistence across pages
-- Use context to manage expanded state
-- Use "push" mode with proper targetContent selector
-- Set height with `calc(100vh - 56px)` to account for navbar
+1. **Type Safety**: Full TypeScript support for component props and event handling
+2. **React Integration**: Components behave like native React components
+3. **Standard Patterns**: Support for controlled components and React patterns
+4. **Performance**: Optimized rendering with React's virtual DOM
+5. **Maintenance**: Easier to maintain as you can update the component library without changing component usage
 
-### Form Components
-- Always use Modus form components instead of HTML elements
-- Handle validation through component properties when available
+## Common Patterns
+
+### Working with Forms
+
+React forms work well with Modus Web Components by applying the controlled input pattern:
+
+```tsx
+import React, { useState, FormEvent } from 'react';
+import { ModusWcTextInput, ModusWcButton } from '@trimble-oss/moduswebcomponents-react';
+
+const FormExample: React.FC = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: ''
+  });
+
+  const handleInputChange = (field: string) => (
+    e: CustomEvent<any>
+  ) => {
+    setFormData({
+      ...formData,
+      [field]: e.detail.target.value
+    });
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    console.log('Form submitted with:', formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <ModusWcTextInput
+        label="First Name"
+        value={formData.firstName}
+        onInputChange={handleInputChange('firstName')}
+      />
+      <ModusWcTextInput
+        label="Last Name"
+        value={formData.lastName}
+        onInputChange={handleInputChange('lastName')}
+      />
+      <ModusWcButton type="submit">Submit</ModusWcButton>
+    </form>
+  );
+};
+```

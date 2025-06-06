@@ -11,7 +11,7 @@
 
 2. **Review Past Implementation Mistakes**
    - Ensure you've read [Common Mistakes](./instructions/lessons-learned/common-mistakes.instructions.md) thoroughly
-   - Document relevant past issues and their solutions
+   - Document relevant past issues and their solutions in short form
    - Acknowledge completion of review before proceeding
 
 3. **Installation and setup of Modus**:
@@ -22,10 +22,10 @@
 3. **Get Complete List of Available Modus Components**
    - Use `get_list_of_all_modus_components` tool
    - Document all available components
-   - Create an inventory of components needed for the project
 
 4. **Create Detailed Implementation Plan**
    - Map requirements to verified Modus components
+   - Create a detailed plan page by page stating which components will be used
    - Use `get_component_details` tool to fetch the details of component and for each component
      - Available properties
      - Events and event names

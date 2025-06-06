@@ -1,29 +1,32 @@
-# Angular State Management for Modus Components
+# Angular State Management with Modus 2.0 Web Components
 
-> **Important Note**: These instructions only **apply to** Angular Projects.
-> **LEAD LEVEL GUIDANCE**: This document provides Angular-specific patterns for state management when using Modus components.
+> **LEAD LEVEL GUIDANCE**: This document provides Angular-specific patterns for state management when using Modus 2.0 Web Components.
 
 ## Overview
 
-State management is a critical aspect of Angular applications using Modus components. This document outlines recommended approaches for managing state across various complexity levels.
+State management in Angular applications using Modus 2.0 Web Components requires proper integration with Angular's form ecosystem and reactive patterns. This guide outlines recommended approaches based on complexity levels.
 
 ## State Management Options
 
-### 1. Component State
+### 1. Component State with Modus 2.0
 
-For simple components with isolated state, use local component state:
+For simple components with isolated state, use Angular's component state with proper Web Component event handling:
 
 ```typescript
 @Component({
-  selector: 'app-simple-state',
+  selector: 'app-simple-counter',
   template: `
     <div>
-      <modus-button (buttonClick)="incrementCounter()">Increment</modus-button>
+      <modus-wc-button
+        (buttonClick)="incrementCounter()"
+        variant="primary">
+        Increment
+      </modus-wc-button>
       <p>Count: {{ counter }}</p>
     </div>
   `
 })
-export class SimpleStateComponent {
+export class SimpleCounterComponent {
   counter = 0;
   
   incrementCounter() {
@@ -34,7 +37,7 @@ export class SimpleStateComponent {
 
 ### 2. Service-based State Management
 
-For sharing state between components in the same feature:
+For sharing state between components, use services with RxJS:
 
 ```typescript
 // counter.service.ts
@@ -48,10 +51,6 @@ export class CounterService {
   incrementCounter() {
     this.counterSubject.next(this.counterSubject.value + 1);
   }
-  
-  resetCounter() {
-    this.counterSubject.next(0);
-  }
 }
 
 // counter.component.ts
@@ -59,262 +58,132 @@ export class CounterService {
   selector: 'app-counter',
   template: `
     <div>
-      <modus-button #incrementButton>Increment</modus-button>
-      <modus-button #resetButton>Reset</modus-button>
+      <modus-wc-button
+        variant="primary"
+        (buttonClick)="increment()">
+        Increment
+      </modus-wc-button>
       <p>Count: {{ counter$ | async }}</p>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CounterComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('incrementButton') incrementButtonRef!: ElementRef;
-  @ViewChild('resetButton') resetButtonRef!: ElementRef;
-  
+export class CounterComponent {
   counter$ = this.counterService.counter$;
   
   constructor(private counterService: CounterService) {}
   
-  ngAfterViewInit() {
-    if (this.incrementButtonRef?.nativeElement) {
-      this.incrementButtonRef.nativeElement.addEventListener('buttonClick', this.increment);
-    }
-    
-    if (this.resetButtonRef?.nativeElement) {
-      this.resetButtonRef.nativeElement.addEventListener('buttonClick', this.reset);
-    }
-  }
-  
-  ngOnDestroy() {
-    if (this.incrementButtonRef?.nativeElement) {
-      this.incrementButtonRef.nativeElement.removeEventListener('buttonClick', this.increment);
-    }
-    
-    if (this.resetButtonRef?.nativeElement) {
-      this.resetButtonRef.nativeElement.removeEventListener('buttonClick', this.reset);
-    }
-  }
-  
-  increment = () => {
+  increment() {
     this.counterService.incrementCounter();
   }
-  
-  reset = () => {
-    this.counterService.resetCounter();
-  }
 }
 ```
 
-### 3. NgRx for Complex Applications
+### 3. Form State Management
 
-For large applications with complex state requirements:
+Using Angular Reactive Forms with Modus Web Components requires proper form integration through directives:
 
 ```typescript
-// counter.actions.ts
-export const increment = createAction('[Counter] Increment');
-export const decrement = createAction('[Counter] Decrement');
-export const reset = createAction('[Counter] Reset');
-
-// counter.reducer.ts
-export interface CounterState {
-  count: number;
-}
-
-export const initialState: CounterState = {
-  count: 0
-};
-
-export const counterReducer = createReducer(
-  initialState,
-  on(increment, state => ({ ...state, count: state.count + 1 })),
-  on(decrement, state => ({ ...state, count: state.count - 1 })),
-  on(reset, state => ({ ...state, count: 0 }))
-);
-
-// counter.selectors.ts
-export const selectCount = (state: { counter: CounterState }) => state.counter.count;
-
-// counter.component.ts
-@Component({
-  selector: 'app-counter',
-  template: `
-    <div>
-      <modus-button #incrementButton>Increment</modus-button>
-      <modus-button #decrementButton>Decrement</modus-button>
-      <modus-button #resetButton>Reset</modus-button>
-      <p>Count: {{ count$ | async }}</p>
-    </div>
-  `
+// modus-input.directive.ts
+@Directive({
+  selector: 'modus-wc-text-input',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => ModusInputDirective),
+      multi: true,
+    }
+  ]
 })
-export class CounterComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('incrementButton') incrementButtonRef!: ElementRef;
-  @ViewChild('decrementButton') decrementButtonRef!: ElementRef;
-  @ViewChild('resetButton') resetButtonRef!: ElementRef;
-  
-  count$ = this.store.select(selectCount);
-  
-  constructor(private store: Store) {}
-  
-  ngAfterViewInit() {
-    if (this.incrementButtonRef?.nativeElement) {
-      this.incrementButtonRef.nativeElement.addEventListener('buttonClick', this.increment);
-    }
-    
-    if (this.decrementButtonRef?.nativeElement) {
-      this.decrementButtonRef.nativeElement.addEventListener('buttonClick', this.decrement);
-    }
-    
-    if (this.resetButtonRef?.nativeElement) {
-      this.resetButtonRef.nativeElement.addEventListener('buttonClick', this.reset);
-    }
+export class ModusInputDirective implements ControlValueAccessor {
+  @Input() label: string;
+  @Input() errorText: string;
+  @Input() helperText: string;
+
+  onChange: any = () => {};
+  onTouched: any = () => {};
+
+  constructor(private elementRef: ElementRef) {}
+
+  @HostListener('valueChange', ['$event.detail'])
+  onValueChange(value: string) {
+    this.onChange(value);
+    this.onTouched();
   }
-  
-  ngOnDestroy() {
-    if (this.incrementButtonRef?.nativeElement) {
-      this.incrementButtonRef.nativeElement.removeEventListener('buttonClick', this.increment);
-    }
-    
-    if (this.decrementButtonRef?.nativeElement) {
-      this.decrementButtonRef.nativeElement.removeEventListener('buttonClick', this.decrement);
-    }
-    
-    if (this.resetButtonRef?.nativeElement) {
-      this.resetButtonRef.nativeElement.removeEventListener('buttonClick', this.reset);
-    }
+
+  writeValue(value: string): void {
+    this.elementRef.nativeElement.value = value;
   }
-  
-  increment = () => {
-    this.store.dispatch(increment());
+
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
   }
-  
-  decrement = () => {
-    this.store.dispatch(decrement());
+
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
   }
-  
-  reset = () => {
-    this.store.dispatch(reset());
+
+  setDisabledState(isDisabled: boolean): void {
+    this.elementRef.nativeElement.disabled = isDisabled;
   }
 }
-```
 
-## Handling Form State
-
-### Reactive Forms with Modus Components
-
-```typescript
+// user-form.component.ts
 @Component({
   selector: 'app-user-form',
   template: `
     <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-      <div>
-        <label for="name">Name:</label>
-        <modus-text-input
-          #nameInput
-          placeholder="Enter name"
-        ></modus-text-input>
-      </div>
-      <div>
-        <label for="email">Email:</label>
-        <modus-text-input
-          #emailInput
-          placeholder="Enter email"
-        ></modus-text-input>
-      </div>
-      <modus-button #submitButton type="submit">Submit</modus-button>
+      <modus-wc-text-input
+        formControlName="username"
+        label="Username"
+        [errorText]="getErrorText('username')"
+      ></modus-wc-text-input>
+      
+      <modus-wc-text-input
+        formControlName="email"
+        label="Email"
+        [errorText]="getErrorText('email')"
+      ></modus-wc-text-input>
+      
+      <modus-wc-button
+        variant="primary"
+        type="submit">
+        Submit
+      </modus-wc-button>
     </form>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UserFormComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('nameInput') nameInputRef!: ElementRef;
-  @ViewChild('emailInput') emailInputRef!: ElementRef;
-  @ViewChild('submitButton') submitButtonRef!: ElementRef;
-  
+export class UserFormComponent {
   userForm = this.fb.group({
-    name: ['', Validators.required],
+    username: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]]
   });
-  
+
   constructor(private fb: FormBuilder) {}
-  
-  ngAfterViewInit() {
-    // Sync the name input with form control
-    if (this.nameInputRef?.nativeElement) {
-      this.nameInputRef.nativeElement.value = this.userForm.get('name')?.value || '';
-      
-      this.nameInputRef.nativeElement.addEventListener('valueChange', this.onNameChange);
-      
-      this.userForm.get('name')?.valueChanges.subscribe(value => {
-        if (this.nameInputRef.nativeElement.value !== value) {
-          this.nameInputRef.nativeElement.value = value;
-        }
-      });
+
+  getErrorText(controlName: string): string {
+    const control = this.userForm.get(controlName);
+    if (control?.errors && control.touched) {
+      if (control.errors['required']) return 'This field is required';
+      if (control.errors['email']) return 'Invalid email format';
     }
-    
-    // Sync the email input with form control
-    if (this.emailInputRef?.nativeElement) {
-      this.emailInputRef.nativeElement.value = this.userForm.get('email')?.value || '';
-      
-      this.emailInputRef.nativeElement.addEventListener('valueChange', this.onEmailChange);
-      
-      this.userForm.get('email')?.valueChanges.subscribe(value => {
-        if (this.emailInputRef.nativeElement.value !== value) {
-          this.emailInputRef.nativeElement.value = value;
-        }
-      });
-    }
-    
-    // Handle submit button
-    if (this.submitButtonRef?.nativeElement) {
-      this.submitButtonRef.nativeElement.addEventListener('buttonClick', this.onSubmit);
-    }
+    return '';
   }
-  
-  ngOnDestroy() {
-    if (this.nameInputRef?.nativeElement) {
-      this.nameInputRef.nativeElement.removeEventListener('valueChange', this.onNameChange);
-    }
-    
-    if (this.emailInputRef?.nativeElement) {
-      this.emailInputRef.nativeElement.removeEventListener('valueChange', this.onEmailChange);
-    }
-    
-    if (this.submitButtonRef?.nativeElement) {
-      this.submitButtonRef.nativeElement.removeEventListener('buttonClick', this.onSubmit);
-    }
-  }
-  
-  onNameChange = (event: CustomEvent) => {
-    this.userForm.get('name')?.setValue(event.detail);
-  }
-  
-  onEmailChange = (event: CustomEvent) => {
-    this.userForm.get('email')?.setValue(event.detail);
-  }
-  
-  onSubmit = () => {
+
+  onSubmit() {
     if (this.userForm.valid) {
-      console.log('Form submitted with:', this.userForm.value);
-      // Send data to backend or perform other actions
+      console.log(this.userForm.value);
     } else {
-      // Mark fields as touched to show validation errors
       this.userForm.markAllAsTouched();
-      
-      // Update Modus components to show validation state
-      if (this.nameInputRef?.nativeElement && this.userForm.get('name')?.invalid && this.userForm.get('name')?.touched) {
-        this.nameInputRef.nativeElement.invalid = true;
-        this.nameInputRef.nativeElement.errorText = 'Name is required';
-      }
-      
-      if (this.emailInputRef?.nativeElement && this.userForm.get('email')?.invalid && this.userForm.get('email')?.touched) {
-        this.emailInputRef.nativeElement.invalid = true;
-        this.emailInputRef.nativeElement.errorText = 'Valid email is required';
-      }
     }
   }
 }
 ```
 
-## Managing Navigation State
+### 4. Navigation State with Modus Components
 
-### Navigation Service with Modus SideNavigation
+Managing navigation state with Modus SideNavigation component:
 
 ```typescript
 // navigation.service.ts
@@ -322,22 +191,21 @@ export class UserFormComponent implements AfterViewInit, OnDestroy {
   providedIn: 'root'
 })
 export class NavigationService {
-  private sidenavExpandedSubject = new BehaviorSubject<boolean>(false);
-  sidenavExpanded$ = this.sidenavExpandedSubject.asObservable();
-  
-  private navItemsSubject = new BehaviorSubject<any[]>([
-    { id: 'home', text: 'Home', icon: 'home', route: '/home' },
-    { id: 'profile', text: 'Profile', icon: 'person', route: '/profile' },
-    { id: 'settings', text: 'Settings', icon: 'settings', route: '/settings' }
-  ]);
-  navItems$ = this.navItemsSubject.asObservable();
-  
-  toggleSidenav() {
-    this.sidenavExpandedSubject.next(!this.sidenavExpandedSubject.value);
+  private expandedState = new BehaviorSubject<boolean>(false);
+  expanded$ = this.expandedState.asObservable();
+
+  private navigationItems = [
+    { id: 'home', text: 'Home', icon: 'mi-home' },
+    { id: 'profile', text: 'Profile', icon: 'mi-person' },
+    { id: 'settings', text: 'Settings', icon: 'mi-settings' }
+  ];
+
+  toggleNavigation() {
+    this.expandedState.next(!this.expandedState.value);
   }
-  
-  updateNavItems(items: any[]) {
-    this.navItemsSubject.next(items);
+
+  getNavigationItems() {
+    return this.navigationItems;
   }
 }
 
@@ -345,127 +213,70 @@ export class NavigationService {
 @Component({
   selector: 'app-root',
   template: `
-    <div class="app-container">
-      <modus-navbar
-        #modusNavbar
-        appName="My Application"
-        [showMainMenu]="true"
-        logoUrl="https://modus.trimble.com/img/trimble-logo.svg"
-      >
-      </modus-navbar>
-      <div class="content-container">
-        <modus-side-navigation
-          #modusSidenav
-          [expanded]="sidenavExpanded$ | async"
-          mode="push"
-          targetContent="#main-content"
-          style="height: calc(100vh - 56px);"
-        >
-        </modus-side-navigation>
-        <main id="main-content">
-          <router-outlet></router-outlet>
-        </main>
-      </div>
-    </div>
+    <modus-wc-navbar
+      appName="My App"
+      [showMainMenu]="true"
+      (mainMenuClick)="toggleNav()"
+    ></modus-wc-navbar>
+
+    <modus-wc-side-navigation
+      [expanded]="expanded$ | async"
+      [items]="navigationItems"
+      (itemClick)="handleNavigation($event)"
+    ></modus-wc-side-navigation>
   `,
-  styles: [`
-    .app-container {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    .content-container {
-      display: flex;
-      flex: 1;
-      position: relative;
-    }
-    #main-content {
-      flex: 1;
-      padding: 16px;
-      overflow: auto;
-    }
-  `]
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AppComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('modusNavbar') navbarRef!: ElementRef;
-  @ViewChild('modusSidenav') sidenavRef!: ElementRef;
-  
-  sidenavExpanded$ = this.navigationService.sidenavExpanded$;
-  
-  constructor(private navigationService: NavigationService, private router: Router) {}
-  
-  ngAfterViewInit() {
-    // Setup navbar event listener
-    if (this.navbarRef?.nativeElement) {
-      this.navbarRef.nativeElement.addEventListener('mainMenuClick', this.toggleSidenav);
-    }
-    
-    // Initialize sidenav items
-    if (this.sidenavRef?.nativeElement) {
-      this.navigationService.navItems$.pipe(
-        takeUntil(this.destroy$)
-      ).subscribe(items => {
-        if (this.sidenavRef.nativeElement.initialized) {
-          this.sidenavRef.nativeElement.items = items;
-        }
-      });
-      
-      this.sidenavRef.nativeElement.addEventListener('itemClick', this.handleNavItemClick);
-    }
+export class AppComponent {
+  expanded$ = this.navService.expanded$;
+  navigationItems = this.navService.getNavigationItems();
+
+  constructor(
+    private navService: NavigationService,
+    private router: Router
+  ) {}
+
+  toggleNav() {
+    this.navService.toggleNavigation();
   }
-  
-  private destroy$ = new Subject<void>();
-  
-  ngOnDestroy() {
-    if (this.navbarRef?.nativeElement) {
-      this.navbarRef.nativeElement.removeEventListener('mainMenuClick', this.toggleSidenav);
-    }
-    
-    if (this.sidenavRef?.nativeElement) {
-      this.sidenavRef.nativeElement.removeEventListener('itemClick', this.handleNavItemClick);
-    }
-    
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-  
-  toggleSidenav = () => {
-    this.navigationService.toggleSidenav();
-  }
-  
-  handleNavItemClick = (event: CustomEvent) => {
-    const route = event.detail.route;
-    if (route) {
-      this.router.navigate([route]);
-    }
+
+  handleNavigation(event: CustomEvent) {
+    const route = `/${event.detail.id}`;
+    this.router.navigate([route]);
   }
 }
 ```
 
-## Best Practices for State Management
+## Best Practices
 
-1. **Choose the Right Approach**
-   - Use component state for simple, isolated components
-   - Use services with RxJS for feature-level state management
-   - Use NgRx or similar libraries for complex application state
+1. **Component Integration**
+   - Use OnPush change detection for better performance
+   - Handle Modus Web Component events through proper event bindings
+   - Create directives for form control integration
 
-2. **RxJS Best Practices**
-   - Use BehaviorSubject for values that need an initial state
-   - Always expose observables (not subjects) from services using `asObservable()`
-   - Use the async pipe in templates when possible
-   - Remember to unsubscribe from observables in ngOnDestroy
+2. **State Management Guidelines**
+   - Use services with RxJS for feature-level state
+   - Implement proper cleanup in components (unsubscribe from observables)
+   - Take advantage of async pipe for subscriptions in templates
 
-3. **State Updates with Modus Components**
-   - Listen for Modus component events to update application state
-   - Update Modus component properties when application state changes
+3. **Form Integration**
+   - Create form control directives for Modus input components
+   - Use reactive forms with proper validation
+   - Handle form state updates through ValueAccessor implementation
 
-4. **Performance Considerations**
-   - Use OnPush change detection strategy
-   - Avoid unnecessary state updates
-   - Use memoized selectors when using NgRx
-   - Consider using shareReplay for expensive computations
+4. **Event Handling**
+   - Use Angular's event binding syntax for Modus Web Component events
+   - Implement proper error handling and loading states
+   - Ensure proper typing of event payloads
 
-5. **Testing State Management**
-   - Test services and NgRx effects/reducers in isolation
-   - Mock Modus components in unit tests
-   - Use integration tests for verifying component-state interactions
+5. **Performance Considerations**
+   - Use OnPush change detection
+   - Properly handle subscriptions and cleanup
+   - Minimize state updates
+   - Use pure pipes for transformations
+
+6. **Testing**
+   - Test services in isolation
+   - Create test harnesses for components with Modus Web Components
+   - Mock Modus Web Component events in unit tests
+   - Use integration tests for complex state interactions

@@ -18,8 +18,6 @@ installation of both packages.
 
 ```bash
 npm install @trimble-oss/moduswebcomponents-react
-# e.g.,
-npm install @trimble-oss/moduswebcomponents-react
 ```
 
 ### 2. Set up the Styling
