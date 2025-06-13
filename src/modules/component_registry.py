@@ -81,11 +81,9 @@ class ComponentRegistry:
         except Exception as e:
             print(f"Error extracting examples from {kb_path}: {e}")
             return []
-    
     def _extract_examples_from_markdown_content(self, content, component_name, framework=None):
-        """Extract examples directly from markdown content"""
+        """Extract examples directly from markdown content - keeps full prompt sections intact"""
         try:            
-            examples = []
             # Find the component section
             print(f"Searching for {component_name} examples in React KB")
             print(f"Looking for component: {component_name} in markdown content")
@@ -107,106 +105,57 @@ class ComponentRegistry:
                 component_section = content[start_index:]
             else:
                 component_section = content[start_index:next_component_index]
+                
+            # Extract full prompt sections
+            examples = []
             
-            # Extract TypeScript/JSX code blocks
-            code_blocks = []
-            current_index = 0
-            block_count = 0
+            # Split the component section by prompt markers
+            prompt_sections = component_section.split("## Prompt")
             
-            while True:
-                # Look for code block markers
-                code_start_markers = ["```tsx", "```jsx", "```typescript", "```javascript", "```"]
-                best_start = -1
-                marker_len = 0
-                marker_type = ""
+            # Skip the first part which contains the component header
+            if len(prompt_sections) > 1:
+                print(f"Found {len(prompt_sections)-1} prompt sections for {component_name}")
                 
-                for marker in code_start_markers:
-                    pos = component_section.find(marker, current_index)
-                    if pos != -1 and (best_start == -1 or pos < best_start):
-                        best_start = pos
-                        marker_len = len(marker)
-                        marker_type = marker
-                
-                if best_start == -1:
-                    break
-                
-                # Find the closing marker
-                code_end = component_section.find("```", best_start + marker_len)
-                if code_end == -1:
-                    break
-                
-                # Extract the code
-                code = component_section[best_start + marker_len:code_end].strip()
-                block_count += 1
-                
-                # Find which prompt this code belongs to (look for "## Prompt" before this block)
-                prompt_positions = []
-                for i in range(1, 10):  # Look for Prompt 1-9
-                    prompt_marker = f"## Prompt {i}"
-                    pos = component_section.find(prompt_marker)
-                    if pos != -1 and pos < best_start:
-                        prompt_positions.append((i, pos))
-                
-                # Sort by position to find the closest prompt
-                prompt_positions.sort(key=lambda x: x[1], reverse=True)
-                prompt_index = prompt_positions[0][0] if prompt_positions else 1
-                
-                # Find the user question for this code block
-                question = ""
-                question_marker = "**User Question:**"
-                question_start = component_section.rfind(question_marker, 0, best_start)
-                if question_start != -1:
-                    question_end = component_section.find("**Agent Answer:**", question_start)
-                    if question_end != -1:
-                        question = component_section[question_start + len(question_marker):question_end].strip()
-                
-                # Add to code blocks
-                code_blocks.append({
-                    "prompt_number": prompt_index,
-                    "question": question,
-                    "code": code
-                })
-                
-                # Move to next position
-                current_index = code_end + 3
-            
-            # Method 2: Find prompts and extract code from each if we haven't found any yet
-            if not code_blocks:
-                # Extract examples from the component section by splitting on "## Prompt"
-                prompts = component_section.split("## Prompt")
-                print(f"Found {len(prompts)-1} prompts for {component_name}")
-                
-                # Skip the first split which contains the component header
-                for i, prompt in enumerate(prompts[1:], 1):
-                    example = {
-                        "prompt_number": i,
-                        "question": "",
-                        "code": ""
-                    }
+                for i, section in enumerate(prompt_sections[1:], 1):
+                    # Extract useful data for reference
+                    prompt_number = i
+                    full_content = f"## Prompt{section}"
                     
-                    # Extract the user question
-                    question_parts = prompt.split("**User Question:**")
-                    if len(question_parts) > 1:
-                        answer_parts = question_parts[1].split("**Agent Answer:**")
-                        if len(answer_parts) > 0:
-                            example["question"] = answer_parts[0].strip()
-                    
-                    # Find code blocks
+                    # Extract code blocks for additional indexing
+                    code = ""
                     code_markers = ["```tsx", "```jsx", "```typescript", "```javascript", "```"]
                     for marker in code_markers:
-                        code_start = prompt.find(marker)
+                        code_start = section.find(marker)
                         if code_start != -1:
-                            code_end = prompt.find("```", code_start + len(marker))
+                            code_end = section.find("```", code_start + len(marker))
                             if code_end != -1:
-                                code = prompt[code_start + len(marker):code_end].strip()
-                                example["code"] = code
+                                code = section[code_start + len(marker):code_end].strip()
                                 break
+                                
+                    # Extract question for additional indexing
+                    question = ""
+                    question_marker = "**User Question:**"
+                    question_start = section.find(question_marker)
+                    if question_start != -1:
+                        answer_marker = "**Agent Answer:**"
+                        answer_start = section.find(answer_marker, question_start)
+                        if answer_start != -1:
+                            question = section[question_start + len(question_marker):answer_start].strip()
+                            
+                    # Create a dictionary with the full content and metadata
+                    example = {
+                        "prompt_number": prompt_number,
+                        "content": full_content,
+                        # Include these for backward compatibility and search indexing
+                        "question": question,
+                        "code": code
+                    }
                     
-                    # Only add examples that have some code
-                    if example["code"]:
-                        code_blocks.append(example)
-            
-            return code_blocks
+                    examples.append(example)
+            else:
+                print(f"No prompt sections found for {component_name}")
+                    
+            return examples
         except Exception as e:
             print(f"Error extracting examples from markdown content: {e}")
             return []

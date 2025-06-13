@@ -1,3 +1,7 @@
+-----
+applyTo: "*.ts, *.html"
+-----
+
 # Modus Angular Component Patterns
 
 > **Important Note**: These instructions only **apply to** Angular Projects.

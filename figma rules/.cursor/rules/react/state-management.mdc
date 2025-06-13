@@ -1,3 +1,8 @@
+---
+description: 
+globs: *.jsx,*.tsx
+alwaysApply: false
+---
 # State Management in Modus 2.0 React Projects
 
 > **LEAD LEVEL GUIDANCE**: This document provides best practices for managing state in Modus 2.0 React applications using Web Components.

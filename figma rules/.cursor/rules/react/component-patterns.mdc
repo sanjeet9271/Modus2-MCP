@@ -1,3 +1,8 @@
+---
+description: 
+globs: *.tsx,*.jsx
+alwaysApply: false
+---
 # Modus React Component Patterns
 
 > **LEAD LEVEL GUIDANCE**: This document provides React-specific patterns for implementing Modus components effectively.

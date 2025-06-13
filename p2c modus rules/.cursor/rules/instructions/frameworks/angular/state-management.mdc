@@ -1,3 +1,12 @@
+---
+description: 
+globs: *.jsx,*.tsx
+alwaysApply: false
+---
+-----
+applyTo: "*.ts, *.html"
+-----
+
 # Angular State Management with Modus 2.0 Web Components
 
 > **LEAD LEVEL GUIDANCE**: This document provides Angular-specific patterns for state management when using Modus 2.0 Web Components.

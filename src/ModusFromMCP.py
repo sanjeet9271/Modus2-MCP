@@ -19,7 +19,7 @@ registry = ComponentRegistry()
 
 # Tool 1: Return guidelines for getting started
 @mcp.tool()
-def getting_started_installation_and_guidelines():
+def getting_started_guidelines():
     """Get guidelines for installation and usage of Modus components"""
     try:
         guidelines = registry.get_installation_guidelines()

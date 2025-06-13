@@ -3845,6 +3845,10 @@ const DeleteButton: React.FC<{ itemId: string }> = ({ itemId }) => {
 
 **Agent Answer:**
 References:
+
+**⚡ Important Rule:** Always use `modus-classic-light` and `modus-classic-dark` as defaults unless the user specifically requests compact themes. Classic themes provide the best UX for most applications.
+
+
 - **Properties**:
   - `userCard`: INavbarUserCard - User information (name, email, avatar)
   - `visibility`: INavbarVisibility - Controls visibility of navbar elements
@@ -3870,7 +3874,10 @@ References:
 **TypeScript Example:**
 ```tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { ModusWcNavbar } from '@trimble-oss/moduswebcomponents-react';
+import { 
+  ModusWcNavbar, 
+  ModusWcThemeSwitcher 
+} from '@trimble-oss/moduswebcomponents-react';
 
 // Interface definitions for better TypeScript support
 interface INavbarUserCard {
@@ -3893,25 +3900,28 @@ interface INavbarVisibility {
   user?: boolean;
 }
 
-const AppNavbar: React.FC = () => {
-  // Navbar reference for event handling
+const MyComponent: React.FC = () => {
+  // Component references for event handling
   const navbarRef = useRef<HTMLModusWcNavbarElement>(null);
+  
+  // State management
   const [searchValue, setSearchValue] = useState<string>('');
+  const [currentTheme, setCurrentTheme] = useState<'modus-classic-light' | 'modus-classic-dark'>('modus-classic-light');
   
   // User information
   const userCard: INavbarUserCard = {
     name: 'John Doe',
     email: 'john.doe@example.com',
-    avatarSrc: 'path/to/avatar.jpg',
+    avatarSrc: 'https://modus.trimble.com/img/trimble-logo.svg',
     avatarAlt: 'John Doe'
   };
   
-  // Visibility configuration
+  // Visibility configuration - Updated to include theme switcher
   const visibility: INavbarVisibility = {
     mainMenu: true,
     notifications: true,
     search: true,
-    apps: false,
+    apps: true,
     help: true,
     user: true
   };
@@ -3919,12 +3929,35 @@ const AppNavbar: React.FC = () => {
   // Text overrides for localization or customization
   const textOverrides = {
     help: 'Support',
-    notifications: 'Alerts'
+    notifications: 'Alerts',
+    apps: 'Theme'
   };
   
+  // Theme handling function
+  const toggleTheme = () => {
+    const newTheme = currentTheme === 'modus-classic-light' 
+      ? 'modus-classic-dark' 
+      : 'modus-classic-light';
+    
+    setCurrentTheme(newTheme);
+    
+    // Apply theme to HTML element following Modus guidelines
+    document.documentElement.setAttribute('data-theme', newTheme);
+    document.documentElement.setAttribute('data-mode', newTheme.includes('dark') ? 'dark' : 'light');
+    document.documentElement.className = newTheme.includes('dark') ? 'dark' : 'light';
+    
+    console.log(`Theme switched to: ${newTheme}`);
+  };
+
   // Event handlers
   useEffect(() => {
     const navbar = navbarRef.current;
+    
+    // Initialize theme on component mount
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    document.documentElement.setAttribute('data-mode', 'light');
+    document.documentElement.className = 'light';
+    
     if (navbar) {
       // Handle search input changes
       const handleSearchChange = (e: CustomEvent<{ value: string }>) => {
@@ -3948,17 +3981,16 @@ const AppNavbar: React.FC = () => {
         navbar.removeEventListener('signOutClick', handleSignOut);
       };
     }
-  }, []);
-  
+  }, [currentTheme]);
+
   return (
     <ModusWcNavbar
       ref={navbarRef}
       userCard={userCard}
       visibility={visibility}
-      textOverrides={textOverrides}>
-      
-      {/* Custom main menu content */}
-      <div slot="main-menu" style={{backgroundColor: '#0063a3', color: 'white', padding: '1rem'}}>
+      textOverrides={textOverrides}
+    >
+      <div slot="main-menu" style={{padding: '1rem'}}>
         <h3>Main Menu</h3>
         <ul>
           <li>Dashboard</li>
@@ -3968,29 +4000,35 @@ const AppNavbar: React.FC = () => {
         </ul>
       </div>
       
+      {/* Theme Switcher in Apps slot */}
+      <div slot="apps" style={{padding: '1rem'}}>
+        <h4>🎨 Theme Settings</h4>
+        <p>Current: {currentTheme.includes('dark') ? '🌙 Dark' : '☀️ Light'} Theme</p>
+        <ModusWcThemeSwitcher 
+          aria-label="Toggle theme between light and dark"
+          onClick={toggleTheme}
+        />
+        <p style={{fontSize: '12px', marginTop: '8px'}}>
+          Switch between Classic Light and Dark themes
+        </p>
+      </div>
+      
       {/* Notifications menu content */}
       <div slot="notifications">
         <div style={{padding: '0.5rem 1rem'}}>
-          <h4 style={{margin: '0.5rem 0'}}>New message</h4>
+          <h4 style={{margin: '0.5rem 0'}}>🔔 New message</h4>
           <p style={{margin: '0.5rem 0'}}>You have a new message from Admin</p>
         </div>
         <div style={{padding: '0.5rem 1rem', borderTop: '1px solid #eee'}}>
-          <h4 style={{margin: '0.5rem 0'}}>System update</h4>
+          <h4 style={{margin: '0.5rem 0'}}>🔧 System update</h4>
           <p style={{margin: '0.5rem 0'}}>System maintenance scheduled for tomorrow</p>
-        </div>
-      </div>
-      
-      {/* Apps menu content */}
-      <div slot="apps">
-        <div style={{padding: '1rem'}}>
-          <p>No application shortcuts configured.</p>
         </div>
       </div>
     </ModusWcNavbar>
   );
 };
 
-export default AppNavbar;
+export default MyComponent;
 ```
 
 **Notes:**

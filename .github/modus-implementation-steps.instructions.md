@@ -5,7 +5,7 @@
 ## REQUIRED SEQUENTIAL PROCESS
 
 1. **Read and Document Understanding of Instructions**
-   - Review and acknowledge understanding of all provided instructions
+   - Review and acknowledge understanding of all the instructions including the custom instructions given regarding modus implementation.
    - Document "Instructions Read" confirmation before proceeding
    - Note any specific requirements or constraints mentioned
 

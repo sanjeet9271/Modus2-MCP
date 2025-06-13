@@ -1,3 +1,8 @@
+---
+description: 
+globs: *.jsx,*.tsx
+alwaysApply: false
+---
 # React Best Practices for Modus Projects
 
 > **LEAD LEVEL GUIDANCE**: This document provides React-specific implementation guidance for Modus projects. It assumes you have already read the core principles.

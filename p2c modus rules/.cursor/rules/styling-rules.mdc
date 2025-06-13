@@ -1,0 +1,193 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## Style Guide
+
+### 1. Component Containers
+```jsx
+<div style={{
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+  padding: '16px',
+  margin: '0 auto',
+  width: '100%',
+  maxWidth: '1200px'
+}}>
+  {/* Components */}
+</div>
+```
+
+### 2. Layout Structure
+- **Vertical Stacking**
+  ```
+  flexDirection: 'column'
+  gap: minimum 8px
+  ```
+- **Horizontal Alignment**
+  ```
+  flexDirection: 'row'
+  justifyContent: 'space-between' or 'center'
+  ```
+- **Spacing**
+  ```
+  padding: minimum 16px
+  margin: '0 auto' for center alignment
+  ```
+
+### 3. Component Properties
+- **Dimensions**: Use relative units (%, vh/vw)
+- **Overflow**: Handle with `overflow: 'auto'`
+- **Responsiveness**: Use flexbox and grid layouts
+
+### 4. Navigation Elements
+- **Navbar**
+  ```css
+  width: 100%;
+  position: sticky;
+  top: 0;
+  zIndex: 1000;
+  ```
+- **SideNavigation**
+  ```css
+  height: calc(100vh - 56px);
+  ```
+
+### 5. Typography
+- Font Family: Open Sans
+- Include in global CSS
+
+### 6. Image Assets
+- **Trimble Assets**
+  - Base URL: `https://modus.trimble.com/img/`
+  - Bootstrap: `https://modus-bootstrap.trimble.com/img/`
+
+- **Navbar Logos**
+  - Blue: `https://modus-bootstrap.trimble.com/img/trimble-logo-rev.svg`
+  - Default: `https://modus.trimble.com/img/trimble-logo.svg`
+
+- **Icons**
+  ```html
+      <head>
+      <link
+        rel="preload"
+        href="https://cdn.jsdelivr.net/npm/@trimble-oss/modus-icons@latest/dist/modus-outlined/fonts/modus-icons.css"
+        as="style"
+        crossorigin="anonymous"
+      />
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@trimble-oss/modus-icons@latest/dist/modus-outlined/fonts/modus-icons.css"
+      />
+    </head>```
+
+ - Add these to index.html or main HTML file to ensure icons are loaded globally.
+
+## 7. Theming and Custom Styling
+
+The Modus Web Components library provides several ways to customize the appearance of components.
+
+**⚡ Important Rule:** Always use `modus-classic-light` and `modus-classic-dark` as defaults unless the user specifically requests compact themes. Classic themes provide the best UX for most applications.
+
+### 7.1. Use a Theme
+Our components ship preloaded with several themes. A list of themes can be found within the daisyui.themes array. Themes can be applied in multiple ways.
+
+#### a. Using the ThemeSwitcher component:
+The Theme Switcher will automatically handle theme switching through our theme store. Theme values are stored in local storage using the key `modus-theme-config`.
+
+```jsx
+<modus-wc-theme-provider initial-theme='{ "theme": "modus-modern-light" }'>
+  <modus-wc-theme-switcher aria-label="Toggle theme" />
+</modus-wc-theme-provider>
+```
+
+#### b. Manually applying the following HTML:
+```html
+<!-- Light theme -->
+<html class="light" data-theme="modus-modern-light" data-mode="light">
+  ...
+</html>
+
+<!-- Dark theme -->
+<html class="dark" data-theme="modus-modern-dark" data-mode="dark">
+  ...
+</html>
+```
+
+### 7.2. Override CSS Custom Properties
+Our components use CSS custom properties for styling. You can override these globally or at the component level.
+
+A full list of overridable CSS custom properties can be found in the Modus documentation.
+
+```css
+:root {
+  --modus-wc-primary-color: purple;
+  --modus-wc-color-info: green;
+  --modus-wc-font-weight-normal: 500;
+}
+```
+
+```css
+.modus-wc-btn {
+  --modus-wc-border-radius-md: 20px;
+}
+```
+
+### 7.3. Use Custom CSS Classes
+Many components accept a `custom-class` attribute for additional styling:
+
+```jsx
+<modus-wc-button
+  label="Custom Button"
+  custom-class="my-custom-button"
+></modus-wc-button>
+```
+
+```css
+.my-custom-button {
+  background-color: purple;
+  border-color: purple;
+}
+```
+
+### 7.4. Apply Direct CSS Overrides
+Since Shadow DOM is disabled, you can directly target component classes.
+
+Our component classes are all prefixed with `modus-wc-` to avoid collisions.
+
+```css
+.modus-wc-btn {
+  background-color: yellow;
+  color: black;
+}
+```
+
+## 8. Component Enhancement Patterns
+
+### 8.1. Enhanced Visual Components with Custom Classes
+
+For components that need enhanced visual appeal, use the `customClass` property (React) or `custom-class` attribute (Angular) combined with sophisticated CSS styling.
+
+#### Example: Beautiful Enhanced Stepper
+
+```jsx
+// React Implementation
+<ModusWcStepper 
+  steps={getStepperSteps()} 
+  orientation="horizontal"
+  customClass="large-stepper"
+/>
+```
+
+```css
+/* Enhanced stepper styling with modern design principles */
+.large-stepper {
+  transform: scale(1.5) !important;
+  margin: 40px 0 !important;
+  font-size: 1.3em !important;
+  line-height: 1.5 !important;
+  filter: drop-shadow(0 4px 12px rgba(0, 99, 163, 0.15)) !important;
+}
+```
