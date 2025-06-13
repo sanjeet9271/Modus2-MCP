@@ -1,0 +1,520 @@
+---
+description: 
+globs: *.tsx,*.jsx
+alwaysApply: false
+---
+-----
+applyTo: "*.ts, *.html"
+-----
+
+# Angular Best Practices for Modus Components
+
+> **Important Note**: These instructions only **apply to** Angular Projects.
+> **LEAD LEVEL GUIDANCE**: This document provides Angular-specific best practices for implementing Modus components effectively.
+
+## Component Architecture
+
+1. **Component Organization**
+   - Follow the Angular module pattern for organizing components
+   - Structure components into feature modules
+   - Keep presentational and container components separate
+   - Implement a clean folder structure with feature-based organization
+
+2. **Component Communication**
+   - Use `@Input()` and `@Output()` for parent-child communication
+   - Use services and RxJS BehaviorSubject/Observable for cross-component communication
+   - Avoid excessive nesting of components to prevent prop drilling
+
+3. **ViewChild for Modus Components**
+   - Use `@ViewChild` to get references to Modus web components in the DOM
+   - Access component references only in or after `ngAfterViewInit` lifecycle hook
+   - Always check if references exist before accessing their properties or methods
+
+4. **Lifecycle Management**
+   - Initialize event listeners in `ngAfterViewInit`
+   - Clean up event listeners in `ngOnDestroy` to prevent memory leaks
+   - Use `implements AfterViewInit, OnDestroy` to enforce lifecycle method implementation
+
+## Event Handling
+
+1. **Event Listeners**
+   - Use arrow functions for event handlers to preserve `this` context
+   - Add event listeners in `ngAfterViewInit` and remove them in `ngOnDestroy`
+   - Follow this pattern for adding event listeners:
+     ```typescript
+     ngAfterViewInit() {
+       if (this.componentRef?.nativeElement) {
+         this.componentRef.nativeElement.addEventListener('eventName', this.handleEvent);
+       }
+     }
+     
+     ngOnDestroy() {
+       if (this.componentRef?.nativeElement) {
+         this.componentRef.nativeElement.removeEventListener('eventName', this.handleEvent);
+       }
+     }
+     
+     handleEvent = (event: CustomEvent) => {
+       // Handle the event
+     }
+     ```
+
+2. **Custom Events**
+   - Use Angular `@Output()` and `EventEmitter` to emit events from Angular components
+   - For Modus components, listen to their native events using `addEventListener`
+   - Create typed event interfaces for complex event data structures
+
+## Change Detection and Performance
+
+1. **Change Detection Strategy**
+   - Use `ChangeDetectionStrategy.OnPush` for better performance when possible
+   - Avoid frequent updates to complex component properties
+   - Use pure pipes for transforming data in templates
+
+2. **Modus Component Initialization**
+   - Initialize Modus component properties only after checking if the component is ready:
+     ```typescript
+     if (this.componentRef?.nativeElement?.initialized) {
+       this.componentRef.nativeElement.property = value;
+     }
+     ```
+
+3. **Performance Considerations**
+   - Avoid manipulating the DOM directly outside of Modus components
+   - Unsubscribe from all observables in `ngOnDestroy`
+   - Use trackBy function with *ngFor for better rendering performance
+
+## Form Integration
+
+1. **Reactive Forms**
+   - Use Angular's Reactive Forms approach with Modus form components
+   - Implement custom form controls with `ControlValueAccessor` to wrap Modus inputs
+   - Handle form validation through Angular's form validation mechanism
+
+2. **Form Events**
+   - Listen to Modus input events and update form controls accordingly
+   - Provide appropriate validation feedback using Modus validation states
+   - Example:
+     ```typescript
+     ngAfterViewInit() {
+       if (this.inputRef?.nativeElement) {
+         this.inputRef.nativeElement.addEventListener('valueChange', (e: CustomEvent) => {
+           this.form.get('field')?.setValue(e.detail);
+         });
+       }
+     }
+     ```
+
+## Testing
+
+1. **Component Testing**
+   - Create TestBed configurations that include Modus components
+   - Implement appropriate mocks for Modus component functionality
+   - Use `fixture.detectChanges()` after setup of components
+
+2. **Event Testing**
+   - Test event handlers by triggering custom events on component elements
+   - Verify component state changes after event handling
+   - Example:
+     ```typescript
+     it('should handle button click', () => {
+       const buttonElement = fixture.debugElement.query(By.css('modus-button')).nativeElement;
+       
+       // Create and dispatch a custom event
+       const customEvent = new CustomEvent('buttonClick', { detail: {} });
+       buttonElement.dispatchEvent(customEvent);
+       
+       fixture.detectChanges();
+       
+       expect(component.handleButtonClickCalled).toBeTrue();
+     });
+     ```
+
+## Styling
+
+1. **Component Styling**
+   - Use component-specific styles with `styles` or `styleUrls` in component decorators
+   - Avoid global styles that might conflict with Modus components
+   - Use Angular's view encapsulation to prevent style leakage
+
+2. **Modus Themes**
+   - Apply Modus themes consistently across the application
+   - Set global theme at the application root level
+   - Override theme variables using Angular's style inclusion mechanism
+
+## Project Setup
+
+1. **Module Configuration**
+   - Include CUSTOM_ELEMENTS_SCHEMA in NgModule to support Modus web components
+   - Import and define components in appropriate feature modules
+   - Example:
+     ```typescript
+     @NgModule({
+       declarations: [
+         AppComponent,
+         // other components
+       ],
+       imports: [
+         BrowserModule,
+         // other modules
+       ],
+       schemas: [CUSTOM_ELEMENTS_SCHEMA], // Required for Modus web components
+       providers: [],
+       bootstrap: [AppComponent]
+     })
+     export class AppModule { }
+     ```
+
+2. **Initialization**
+   - Initialize Modus components in the main.ts or app.module.ts file:
+     ```typescript
+     import { defineCustomElements } from '@trimble-oss/modus-web-components/loader';
+     
+     defineCustomElements().then(() => {
+       // Optional: any code that should run after Modus components are defined
+     });
+     ```
+
+
+# Angular Framework Integration
+
+This guide will help you get started with consuming the Modus Angular Web Component library in your Angular project.
+
+We highly recommend using the Modus Angular Components library for Angular based projects.
+These components are automatically generated using the Stencil Angular Framework Integration.
+
+Follow the steps outlined below to integrate and use Modus Angular Web Components effectively.
+
+Please refer to the [official stencil documentation](https://stenciljs.com/docs/angular#consumer-usage) for more information on how to integrate with your Angular project.
+
+## Angular with modules
+
+Modus Angular Components have a peer dependency with Modus Web Components and require the
+installation of both packages.
+
+### 1. Install both `modus-wc` and `modus-wc-angular` dependencies:
+
+Ensure that you specify the target version of Angular for the `modus-wc-angular` package (e.g., `ng18` for Angular 18).
+
+<b>
+  Lock the installed package versions to avoid unintended breakages on future
+  npm installs.
+</b>
+
+```bash
+npm install @trimble-oss/moduswebcomponents @trimble-oss/moduswebcomponents-angular@<latest-version>-ng<target-version>
+```
+
+### 2. Set up the styling:
+
+You will need to import our styling in your main JavaScript or CSS file:
+
+```js
+import '@trimble-oss/moduswebcomponents/modus-wc-styles.css';
+```
+
+### 3. Import Modus Angular Web Components library into your Angular app's module:
+
+```ts
+// app.module.ts
+import { ModusAngularComponentsModule } from '@trimble-oss/moduswebcomponents-angular';
+
+@NgModule({
+  ...
+  imports: [ComponentLibraryModule],
+  ...
+})
+export class AppModule {}
+```
+
+### 4. Use Modus Angular Web Components while leveraging Angular template binding syntax:
+
+```ts
+// app.component.html
+<modus-wc-button label="Click Me" />
+```
+
+## Angular with standalone components
+
+Modus Angular Components have a peer dependency with Modus Web Components and require the
+installation of both packages.
+
+### 1. Install both `modus-wc` and `modus-wc-angular` dependencies:
+
+Ensure that you specify the target version of Angular for the `modus-wc-angular` package (e.g., `ng18` for Angular 18).
+
+<b>
+  Lock the installed package versions to avoid unintended breakages on future
+  npm installs.
+</b>
+
+```bash
+npm install @trimble-oss/moduswebcomponents @trimble-oss/moduswebcomponents-angular@<latest-version>-ng<target-version>
+```
+
+### 2. Set up the styling:
+
+You will need to import our styling in your main JavaScript or CSS file:
+
+```js
+import '@trimble-oss/moduswebcomponents/modus-wc-styles.css';
+```
+
+### 3. Import your component library into your component.
+
+You must distribute your components through a primary `NgModule` to use your components in a standalone component.
+
+```ts
+// app.component.ts
+import { Component } from '@angular/core';
+import { ModusAngularComponentsModule } from '@trimble-oss/moduswebcomponents-angular';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [ModusAngularComponentsModule],
+  templateUrl: './app.component.html',
+})
+export class AppComponent {}
+```
+
+### 4. Use Modus Angular Web Components while leveraging Angular template binding syntax:
+
+```ts
+// app.component.html
+<modus-wc-button label="Click Me" />
+```
+
+### Custom Elements Schema
+
+In the `app.module.ts` file, you need to tell angular that you are using custom element schemas
+so that it does not throw errors when unknown element names are used in the markup.
+
+Import `CUSTOM_ELEMENTS_SCHEMA` and add it to your `@NgModule`'s schemas:
+
+```ts
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+
+@NgModule({
+  ...
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  ...
+})
+```
+
+### Wrapping Components
+
+When using Modus Web Components directly, it is recommended to wrap it in corresponding Angular components within your application. This will abstract away from the library dependency, allowing more flexibility for you and your application in the future. Each part of the component is able to be abstracted, leaving you with an Angular-native component.
+
+Notice Angular allows `[]` and `()` markup syntax for the web component's inputs and outputs, respectively.
+
+Wrapped Modus Button Example:
+
+```ts
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+
+@Component({
+  selector: 'button-component',
+  template: `
+    <modus-wc-button
+      [buttonStyle]="buttonStyle"
+      [color]="color"
+      [disabled]="disabled"
+      [size]="size"
+      (buttonClick)="onButtonClick.emit()"
+    >
+      <ng-content></ng-content>
+    </modus-wc-button>
+  `,
+})
+export class ButtonComponent {
+  @Input() buttonStyle: 'borderless' | 'fill' | 'outline' = 'fill';
+  @Input() color: 'danger' | 'default' | 'primary' | 'secondary' | 'warning' =
+    'default';
+  @Input() disabled: boolean;
+  @Input() size: 'small' | 'medium' | 'large' = 'medium';
+
+  @Output() onButtonClick = new EventEmitter();
+}
+```
+
+### Reactive Forms
+
+Working with a web component's inputs/outputs works great but these components do not integrate with Angular's reactive forms quite as easily. Since web components do not know about Angular's form APIs, we must extend form-compatible components' behavior with simple directives. These directives are applied to the web component selectors, giving the components Angular form functionality.
+
+Let's take a look at a directive implementation for a Modus Select's form functionality.
+
+#### Wrapper
+
+You'll notice the `modus-select` in the markup is taking extra inputs, such as `formControl` and `optionsDisplayProp`, these inputs are provided by the directive below. Here is what our wrapper looks like:
+
+```ts
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormControl } from '@angular/forms';
+
+@Component({
+  selector: 'select-component',
+  template: `
+    <modus-wc-select
+      #select
+      [disabled]="disabled"
+      [errorText]="errorText"
+      [formControl]="formControl"
+      [helperText]="helperText"
+      [label]="label"
+      [options]="options"
+      [optionsDisplayProp]="optionsDisplayProp"
+      [required]="required"
+      [selectValue]="value"
+      [size]="size"
+      [validText]="validText"
+      (valueChange)="onSelectValueChange.emit(select.value)"
+    >
+    </modus-wc-select>
+  `,
+})
+export class SelectComponent {
+  @Input() disabled: boolean;
+  @Input() errorText: string;
+  @Input() formControl: FormControl;
+  @Input() helperText: string;
+  @Input() label: string;
+  @Input() options: unknown[] = [];
+  @Input() optionsDisplayProp: string;
+  @Input() required: boolean;
+  @Input() size: 'medium' | 'large' = 'medium';
+  @Input() validText: string;
+  @Input() value: unknown;
+
+  @Output() onSelectValueChange = new EventEmitter<unknown>();
+}
+```
+
+#### Directive
+
+Moving onto the directive, there are a few things to keep in mind.
+
+- The directive's selector is set to the web component's tag, not the wrapper's.
+- Implementing the `ControlValueAccessor` interface helps Angular understand when the form control has been updated or changed.
+  - When the value is set, `onChange()` notifies that the control has been updated.
+  - Calling `onTouched()` lets Angular know the component has been touched, which is needed for form validation.
+- The `get value()`, and `set value()` are used by Angular's form control.
+- Using the `@HostListener` decorator lets you listen to events from the web component, and execute appropriate logic.
+
+Here is what our directive looks like:
+
+```ts
+import {
+  Directive,
+  forwardRef,
+  ElementRef,
+  HostListener,
+  Input,
+  OnInit,
+  Output,
+  EventEmitter,
+} from '@angular/core';
+import {
+  ControlValueAccessor,
+  FormControl,
+  NG_VALUE_ACCESSOR,
+} from '@angular/forms';
+
+@Directive({
+  selector: 'modus-wc-select',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => ModusSelectDirective),
+      multi: true,
+    },
+  ],
+})
+export class ModusSelectDirective implements ControlValueAccessor, OnInit {
+  @Input() disabled: boolean;
+  @Input() errorText: string;
+  @Input() formControl: FormControl;
+  @Input() helperText: string;
+  @Input() label: string;
+  @Input() options: unknown[];
+  @Input() optionsDisplayProp: string;
+  @Input() required: boolean;
+  @Input() selectValue: unknown;
+  @Input() size: 'medium' | 'large';
+  @Input() validText: string;
+
+  @Output() valueChange = new EventEmitter<string>();
+
+  onChange: any = () => {};
+  onTouched: any = () => {};
+
+  private _value: string;
+
+  get value() {
+    return this._value;
+  }
+
+  set value(value) {
+    if (value !== this._value) {
+      this._value = value;
+      this.onChange(this._value);
+      this.onTouched();
+      this.elementRef.nativeElement.value = value;
+    }
+  }
+
+  constructor(private elementRef: ElementRef) {}
+
+  ngOnInit(): void {
+    const modusSelect = this.elementRef.nativeElement as HTMLModusSelectElement;
+    modusSelect.disabled = this.disabled;
+    modusSelect.errorText = this.errorText;
+    modusSelect.helperText = this.helperText;
+    modusSelect.label = this.label;
+    modusSelect.options = this.options;
+    modusSelect.optionsDisplayProp = this.optionsDisplayProp;
+    modusSelect.required = this.required;
+    modusSelect.size = this.size;
+    modusSelect.validText = this.validText;
+    modusSelect.value = this.selectValue;
+
+    if (!this.formControl) {
+      this.formControl = new FormControl(null);
+    }
+  }
+
+  @HostListener('valueChange', ['$event.detail'])
+  listenForValueChange(value: string): void {
+    this.value = value;
+  }
+
+  registerOnChange(fn: Function): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: Function): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+  }
+
+  writeValue(value: string): void {
+    if (value) {
+      this.value = value;
+    }
+  }
+}
+```
+
+Now adding the Modus Select as a form control is as easy as:
+
+```ts
+<select-component
+  [formControl]="$any(form).controls['select1']"
+  [label]="'Select Form Demo'"
+  [options]="options"
+  [optionsDisplayProp]="'display'">
+</select-component>
+```

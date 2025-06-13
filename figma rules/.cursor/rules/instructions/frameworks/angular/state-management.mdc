@@ -1,0 +1,291 @@
+---
+description: 
+globs: *.jsx,*.tsx
+alwaysApply: false
+---
+-----
+applyTo: "*.ts, *.html"
+-----
+
+# Angular State Management with Modus 2.0 Web Components
+
+> **LEAD LEVEL GUIDANCE**: This document provides Angular-specific patterns for state management when using Modus 2.0 Web Components.
+
+## Overview
+
+State management in Angular applications using Modus 2.0 Web Components requires proper integration with Angular's form ecosystem and reactive patterns. This guide outlines recommended approaches based on complexity levels.
+
+## State Management Options
+
+### 1. Component State with Modus 2.0
+
+For simple components with isolated state, use Angular's component state with proper Web Component event handling:
+
+```typescript
+@Component({
+  selector: 'app-simple-counter',
+  template: `
+    <div>
+      <modus-wc-button
+        (buttonClick)="incrementCounter()"
+        variant="primary">
+        Increment
+      </modus-wc-button>
+      <p>Count: {{ counter }}</p>
+    </div>
+  `
+})
+export class SimpleCounterComponent {
+  counter = 0;
+  
+  incrementCounter() {
+    this.counter++;
+  }
+}
+```
+
+### 2. Service-based State Management
+
+For sharing state between components, use services with RxJS:
+
+```typescript
+// counter.service.ts
+@Injectable({
+  providedIn: 'root'
+})
+export class CounterService {
+  private counterSubject = new BehaviorSubject<number>(0);
+  counter$ = this.counterSubject.asObservable();
+  
+  incrementCounter() {
+    this.counterSubject.next(this.counterSubject.value + 1);
+  }
+}
+
+// counter.component.ts
+@Component({
+  selector: 'app-counter',
+  template: `
+    <div>
+      <modus-wc-button
+        variant="primary"
+        (buttonClick)="increment()">
+        Increment
+      </modus-wc-button>
+      <p>Count: {{ counter$ | async }}</p>
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class CounterComponent {
+  counter$ = this.counterService.counter$;
+  
+  constructor(private counterService: CounterService) {}
+  
+  increment() {
+    this.counterService.incrementCounter();
+  }
+}
+```
+
+### 3. Form State Management
+
+Using Angular Reactive Forms with Modus Web Components requires proper form integration through directives:
+
+```typescript
+// modus-input.directive.ts
+@Directive({
+  selector: 'modus-wc-text-input',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => ModusInputDirective),
+      multi: true,
+    }
+  ]
+})
+export class ModusInputDirective implements ControlValueAccessor {
+  @Input() label: string;
+  @Input() errorText: string;
+  @Input() helperText: string;
+
+  onChange: any = () => {};
+  onTouched: any = () => {};
+
+  constructor(private elementRef: ElementRef) {}
+
+  @HostListener('valueChange', ['$event.detail'])
+  onValueChange(value: string) {
+    this.onChange(value);
+    this.onTouched();
+  }
+
+  writeValue(value: string): void {
+    this.elementRef.nativeElement.value = value;
+  }
+
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.elementRef.nativeElement.disabled = isDisabled;
+  }
+}
+
+// user-form.component.ts
+@Component({
+  selector: 'app-user-form',
+  template: `
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+      <modus-wc-text-input
+        formControlName="username"
+        label="Username"
+        [errorText]="getErrorText('username')"
+      ></modus-wc-text-input>
+      
+      <modus-wc-text-input
+        formControlName="email"
+        label="Email"
+        [errorText]="getErrorText('email')"
+      ></modus-wc-text-input>
+      
+      <modus-wc-button
+        variant="primary"
+        type="submit">
+        Submit
+      </modus-wc-button>
+    </form>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class UserFormComponent {
+  userForm = this.fb.group({
+    username: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]]
+  });
+
+  constructor(private fb: FormBuilder) {}
+
+  getErrorText(controlName: string): string {
+    const control = this.userForm.get(controlName);
+    if (control?.errors && control.touched) {
+      if (control.errors['required']) return 'This field is required';
+      if (control.errors['email']) return 'Invalid email format';
+    }
+    return '';
+  }
+
+  onSubmit() {
+    if (this.userForm.valid) {
+      console.log(this.userForm.value);
+    } else {
+      this.userForm.markAllAsTouched();
+    }
+  }
+}
+```
+
+### 4. Navigation State with Modus Components
+
+Managing navigation state with Modus SideNavigation component:
+
+```typescript
+// navigation.service.ts
+@Injectable({
+  providedIn: 'root'
+})
+export class NavigationService {
+  private expandedState = new BehaviorSubject<boolean>(false);
+  expanded$ = this.expandedState.asObservable();
+
+  private navigationItems = [
+    { id: 'home', text: 'Home', icon: 'mi-home' },
+    { id: 'profile', text: 'Profile', icon: 'mi-person' },
+    { id: 'settings', text: 'Settings', icon: 'mi-settings' }
+  ];
+
+  toggleNavigation() {
+    this.expandedState.next(!this.expandedState.value);
+  }
+
+  getNavigationItems() {
+    return this.navigationItems;
+  }
+}
+
+// app.component.ts
+@Component({
+  selector: 'app-root',
+  template: `
+    <modus-wc-navbar
+      appName="My App"
+      [showMainMenu]="true"
+      (mainMenuClick)="toggleNav()"
+    ></modus-wc-navbar>
+
+    <modus-wc-side-navigation
+      [expanded]="expanded$ | async"
+      [items]="navigationItems"
+      (itemClick)="handleNavigation($event)"
+    ></modus-wc-side-navigation>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class AppComponent {
+  expanded$ = this.navService.expanded$;
+  navigationItems = this.navService.getNavigationItems();
+
+  constructor(
+    private navService: NavigationService,
+    private router: Router
+  ) {}
+
+  toggleNav() {
+    this.navService.toggleNavigation();
+  }
+
+  handleNavigation(event: CustomEvent) {
+    const route = `/${event.detail.id}`;
+    this.router.navigate([route]);
+  }
+}
+```
+
+## Best Practices
+
+1. **Component Integration**
+   - Use OnPush change detection for better performance
+   - Handle Modus Web Component events through proper event bindings
+   - Create directives for form control integration
+
+2. **State Management Guidelines**
+   - Use services with RxJS for feature-level state
+   - Implement proper cleanup in components (unsubscribe from observables)
+   - Take advantage of async pipe for subscriptions in templates
+
+3. **Form Integration**
+   - Create form control directives for Modus input components
+   - Use reactive forms with proper validation
+   - Handle form state updates through ValueAccessor implementation
+
+4. **Event Handling**
+   - Use Angular's event binding syntax for Modus Web Component events
+   - Implement proper error handling and loading states
+   - Ensure proper typing of event payloads
+
+5. **Performance Considerations**
+   - Use OnPush change detection
+   - Properly handle subscriptions and cleanup
+   - Minimize state updates
+   - Use pure pipes for transformations
+
+6. **Testing**
+   - Test services in isolation
+   - Create test harnesses for components with Modus Web Components
+   - Mock Modus Web Component events in unit tests
+   - Use integration tests for complex state interactions

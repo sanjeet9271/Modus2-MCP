@@ -1,5 +1,5 @@
 ---
-description: It should always be read before the implementation of any design 
+description: Whenever asked to fix or bug or add some feature refer to this file
 globs: 
 alwaysApply: false
 ---
