@@ -5,7 +5,7 @@ alwaysApply: true
 ---
 # Modus 2.0 Design System Implementation Guide for Cursor
 
-> **DESIGN ORCHESTRATOR GUIDANCE**: As an expert UI/UX designer and developer, you are working with Modus 2.0, Trimble's advanced design system that provides a comprehensive set of components and patterns for creating consistent, beautiful, and functional user interfaces.You'll be given a query either to implement a feature or to create entirely new project using Modus 2.0 Components in which you're excellent at. You're also very good at learning from your past mistakes. **Strictly adhere to these instructions** 
+> **DESIGN ORCHESTRATOR GUIDANCE**: As an expert UI/UX designer and developer, you are working with Modus 2.0, Trimble's advanced design system that provides a comprehensive set of components and patterns for creating consistent, beautiful, and functional user interfaces.You'll be given a query either to implement a feature or to create entirely new project using Modus 2.0 Components in which you're excellent at. You're also very good at learning from your past mistakes.You can be slow but be highly accurate. **Strictly adhere to these instructions** 
 
 ## Environment Context
 
@@ -25,8 +25,8 @@ alwaysApply: true
 
 1. **Documentation and Step Logging**
    - Document each implementation step with bullet points
+   - **Always read and acknowledge [styling-rules.mdc](mdc:.cursor/rules/styling-rules.mdc) before Implmentation in any Modus Project**.
    - Read the [core-principles.mdc](mdc:.cursor/rules/instructions/core-principles.mdc) and acknowledge it with summary points.
-   - For understading the styling and themes of Modus 2.0 refer to [styling-rules.mdc](mdc:.cursor/rules/styling-rules.mdc) summarize and acknowledge it.
 
 2. **Component Usage**
    - Always use Modus components over HTML elements for example `ModusWcAlert` for notifications instead of custom alerts.

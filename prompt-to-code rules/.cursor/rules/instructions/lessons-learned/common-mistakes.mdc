@@ -9,6 +9,8 @@ A concise reference for GitHub Copilot to avoid common mistakes with Modus compo
 
 **Important** : Avoid getting details of all components at one after another for the whole project. Instead get the details of only those components that are needed for implementing on the page you're woking on. Then fetch the required for next page and so on.
 
+**Imporant** : Before starting the project always ensure youv've read the style guide [styling-rules.mdc](mdc:.cursor/rules/styling-rules.mdc).
+
 ## Modus Component Usage
 
 1. **ALWAYS verify component availability**: Use the `get_list_of_all_modus_components` tool to confirm that the component exists before using it.

@@ -7,6 +7,8 @@ alwaysApply: true
 
 > **Important** : Always follow the below styling guidelines for any Modus Project
 
+> **Important** : Ensure that you use the entire screen-width not limiting it to 1200px as max-width. Also ensure the alignment is proper. Think about this for a second before implementing this in any page.
+
 ## 1. Theming and Custom Styling
 
 The Modus Web Components library provides several ways to customize the appearance of components.
@@ -125,13 +127,16 @@ For components that need enhanced visual appeal, use the `customClass` property 
   padding: '16px',
   margin: '0 auto',
   width: '100%',
-  maxWidth: '1200px'
 }}>
   {/* Components */}
 </div>
 ```
 
 ## 4. Layout Structure
+ 
+ - **Important** : The root width should be `100vw` and without any margin and padding. Rest of the components width should be as necessary for them for example. Navbar should have full width use your intelligence for that.
+
+
 - **Vertical Stacking**
   ```
   flexDirection: 'column'

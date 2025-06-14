@@ -65,6 +65,12 @@ Add the following to your application's HTML head section:
 </head>
 ```
 
+### CSS integration 
+Add this to global css files for Modus Components to work
+
+```css
+@import '@trimble-oss/moduswebcomponents/modus-wc-styles.css';
+```
 ---
 
 ## React Implementation

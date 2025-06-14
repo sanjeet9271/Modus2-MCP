@@ -5,17 +5,18 @@ alwaysApply: true
 ---
 ## Mandatory Implementation Process
 
-> **⚠️ MANDATORY PROCESS ⚠️**: You MUST follow these steps in exact sequence with no exceptions. For each step, document your actions and findings before proceeding to the next step. **5th step is most important**
+> **⚠️ MANDATORY PROCESS ⚠️**: Avoid skipping any step below. You MUST follow these steps in exact sequence with no exceptions. For each step, document your actions before proceeding to next step.
 
 ### REQUIRED SEQUENTIAL PROCESS
 
-1. **Read and Document Understanding of Instructions**
-   - Review and acknowledge understanding of all the instructions including the custom instructions given regarding modus implementation.
-   - Document "Instructions Read" confirmation before proceeding
+1. **Read and Document Understanding of Rules**
+   - **Review, Summarize and acknowledge understanding of all rules given to you as `.mdc` files one by one including the ones related to the framework you're going to work with** 
+   - Write in chat "Modus Rules Read and Understood" confirmation before proceeding
    - Note any specific requirements or constraints mentioned
 
 2. **Review Past Implementation Mistakes**
    - Ensure you've read [common-mistakes.mdc](mdc:.cursor/rules/instructions/lessons-learned/common-mistakes.mdc) thoroughly
+   - Ensure you've read [styling-rules.mdc](mdc:.cursor/rules/styling-rules.mdc) thorougly
    - Document relevant past issues and their solutions in short form
    - Acknowledge completion of review before proceeding
 
@@ -30,6 +31,7 @@ alwaysApply: true
 
 5. **Create Detailed Implementation Plan**
    - Mapping requirements to verified Modus components create a detailed plan page by page stating which components will be used
+   - **Always think before implementing any new Page check the current status of project and then follow** 
    - Use `get_component_details` tool to fetch the details of component and for each component
      - Available properties
      - Events and event names
