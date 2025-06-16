@@ -3,64 +3,105 @@ description: This file needs to be requested everytime you're given to implement
 globs: 
 alwaysApply: false
 ---
-# Modus Guidelines - Core Principles
+# Modus 2.0 - Core Implementation Principles
 
-> **ARCHITECT LEVEL GUIDANCE**: This document provides high-level direction for Modus project implementation. It defines the core principles that you as an must follow. 
+> **ARCHITECT LEVEL GUIDANCE**: This document defines the fundamental principles for implementing Modus 2.0 projects. These principles must be followed without exception to ensure consistency, reliability, and maintainability.
 
-## Core Principles
+---
 
-### 1. Component Verification
-- **ALWAYS** verify component existence before use through official tools
-- **NEVER** assume a component exists or has specific properties
+## 🎯 Implementation Methodology
 
-### 2. Evidence-Based Implementation
-- **ALWAYS** base implementations on official examples and documentation
-- **NEVER** make assumptions about component behavior
+### Phase 1: Pre-Implementation Verification
+- **ALWAYS** verify component existence using official tools before implementation
+- **ALWAYS** fetch component details and properties throug `get_component_details` before fixing bug or implementing.
+- **ALWAYS** verify icon names using `get_modus_icons_by_char` before usage
+- **NEVER** assume components or icons exist without verification
 
-### 3. DOM Event Prioritization
-- **ALWAYS** use native DOM events over React synthetic events
-- **NEVER** create custom event handlers when native ones exist
-
-### 4. Modular Architecture
-- **ALWAYS** create modular, reusable components
-- **NEVER** build monolithic page components
-
-### 5. Visual Consistency
-- **ALWAYS** ensure full-width layouts and proper component alignment
-- **NEVER** sacrifice visual quality for implementation speed
-
-### 6. Event Cleanup
-- **ALWAYS** provide cleanup functions in useEffect hooks
-- **NEVER** leave event listeners that could cause memory leaks
-
-### 7. Icon Verification
-- **ALWAYS** verify icon names before using them
-- **NEVER** use unverified icon names that might not exist
-
-### 8. Component Substitution
-- **ALWAYS** use Modus components instead of HTML elements
+### Phase 2: Component Selection Strategy
+- **ALWAYS** prioritize Modus components over HTML elements
+- **ALWAYS** use evidence-based implementations from official documentation
 - **NEVER** create custom components when Modus alternatives exist
+- **NEVER** make assumptions about component behavior without documentation
 
-### 9. Documentation
-- **ALWAYS** document special considerations and workarounds
-- **NEVER** implement undocumented solutions
+### Phase 3: Event & Styling Implementation
+- **ALWAYS** use native DOM events with `addEventListener` over React synthetic events
+- **ALWAYS** implement proper event cleanup in `useEffect` return functions
+- **ALWAYS** use `customClass` prop for component styling customizations
+- **ALWAYS** follow styling guidelines from [styling-rules.mdc](mdc:.cursor/rules/styling-rules.mdc)
+- **NEVER** sacrifice visual quality for implementation speed
+- **NEVER** : AVOID CREATING COMPONENT WHEN THERE'S A MODUS COMPONENT AVIALBLE FOR THAT. 
 
-### 10. Testing
-- **ALWAYS** test components both individually and in context
-- **NEVER** assume a component works without verification
+---
 
-## Standard Project Structure
+## 🏗️ Architecture Standards
+
+### Component Design Principles
+1. **Modular Architecture**: Create reusable, single-responsibility components
+2. **Layout Consistency**: Ensure full-width layouts and proper alignment
+3. **Documentation**: Document all special considerations and workarounds
+4. **Testing**: Verify components individually and in context using Browser MCP
+
+### Event Management Best Practices
+```typescript
+// ✅ CORRECT: Native DOM events with cleanup
+useEffect(() => {
+  const element = elementRef.current;
+  if (element) {
+    element.addEventListener('eventName', handleEvent);
+    return () => element.removeEventListener('eventName', handleEvent);
+  }
+}, []);
+
+// ❌ INCORRECT: React synthetic events without cleanup
+<Component onClick={handleClick} />
+```
+
+---
+
+## 📁 Standard Project Structure
 
 ```
 src/
-├── components/           # Reusable components
-│   ├── layout/          # Layout components (Navbar, Sidebar, Footer)
-│   ├── shared/          # Shared components used across features
+├── components/           # Reusable UI components
+│   ├── layout/          # Navigation, headers, footers
+│   ├── shared/          # Cross-feature shared components  
 │   └── feature/         # Feature-specific components
-├── pages/               # Page components that use reusable components
-├── context/             # Context providers for state management
+├── pages/               # Route-based page components
+├── context/             # State management providers
 ├── hooks/               # Custom React hooks
-├── routes/              # Routing configuration
-├── utils/               # Utility functions
-└── assets/              # Static assets
+├── routes/              # Application routing
+├── utils/               # Helper functions
+├── assets/              # Static resources
+└── styles/              # Global and component styles
 ```
+
+---
+
+## ✅ Critical Checkpoints
+
+**Before Implementation:**
+- [ ] Component existence verified through official tools
+- [ ] Icon names validated using Modus icon library
+- [ ] Component properties and events documented
+
+**During Implementation:**
+- [ ] Native DOM events implemented with proper cleanup
+- [ ] **Modus components used instead of HTML elements**
+- [ ] Custom styling applied through `customClass` prop. You can use this for any modification in the component styling. 
+- [ ] Visual consistency maintained across layouts
+
+**After Implementation:**
+- [ ] Components tested individually and in context
+- [ ] Event listeners properly cleaned up
+- [ ] Documentation updated for any special considerations
+- [ ] Browser MCP testing completed for visual verification
+
+---
+
+## 🚫 Anti-Patterns to Avoid
+
+1. **Assumption-Based Development**: Never assume component properties or behavior
+2. **Memory Leaks**: Always cleanup event listeners in useEffect returns
+3. **Custom HTML Overuse**: Don't create HTML elements when Modus components exist
+4. **Undocumented Solutions**: Never implement workarounds without documentation
+5. **Synthetic Event Preference**: Avoid React synthetic events when DOM events are available

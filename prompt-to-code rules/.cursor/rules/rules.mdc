@@ -13,7 +13,7 @@ alwaysApply: true
 
 - **Design System**: Modus 2.0 
 - **Shell Environment**: PowerShell
-- **Command Syntax**: Use `;` for command chaining (instead of `&&` used in bash)
+- **Command Syntax**: Use `;` for command chaining eg `cd dummy-app; npm run dev`
 
 - **Terminal Commands Example**:
 

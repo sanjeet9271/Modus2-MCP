@@ -9,6 +9,8 @@ alwaysApply: true
 
 > **Important** : Ensure that you use the entire screen-width not limiting it to 1200px as max-width. Also ensure the alignment is proper. Think about this for a second before implementing this in any page.
 
+> **Important** : **Always use ModusIcons instead of custom Icons**
+
 ## 1. Theming and Custom Styling
 
 The Modus Web Components library provides several ways to customize the appearance of components.

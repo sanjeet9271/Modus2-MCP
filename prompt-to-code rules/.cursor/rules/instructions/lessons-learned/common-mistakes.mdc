@@ -11,6 +11,8 @@ A concise reference for GitHub Copilot to avoid common mistakes with Modus compo
 
 **Imporant** : Before starting the project always ensure youv've read the style guide [styling-rules.mdc](mdc:.cursor/rules/styling-rules.mdc).
 
+**Imporant** : Before correct any mistake make sure to check the implementation of related components.
+
 ## Modus Component Usage
 
 1. **ALWAYS verify component availability**: Use the `get_list_of_all_modus_components` tool to confirm that the component exists before using it.
@@ -43,6 +45,29 @@ A concise reference for GitHub Copilot to avoid common mistakes with Modus compo
 4. **Height**: Account for navbar height with calc(100vh - 56px)
 5. **Content Area**: Must have overflow handling and proper transitions
 
+## ModusWcTable Advanced Usage
+
+1. **Interactive cells with inputs**: Use `cellRenderer` to create DOM elements directly, then `addEventListener` for events and update React state in the handler.
+```jsx
+cellRenderer: (value, row) => {
+  const container = document.createElement('div');
+  const input = document.createElement('modus-wc-text-input');
+  input.setAttribute('type', 'date');
+  input.value = value || '';
+  
+  const handleChange = (e) => {
+    // Update React state here
+    setData(prev => prev.map(item => 
+      item.id === row.id ? { ...item, field: e.detail.target.value } : item
+    ));
+  };
+  
+  input.addEventListener('inputChange', handleChange);
+  container.appendChild(input);
+  return container;
+}
+```
+
 ## Common Mistakes
 
 1. Using React event handlers instead of native DOM events
@@ -60,6 +85,7 @@ A concise reference for GitHub Copilot to avoid common mistakes with Modus compo
 13. **Always set up global Open Sans font**: Create a global.css file with font-family settings for all elements and import it in main.jsx to ensure consistent typography across the application. Without this, components may use default system fonts instead of the required Open Sans font.
 14. **ModusWcModal requires modalId prop**: Always provide a unique `modalId` prop when using ModusWcModal. Access the internal dialog element using `querySelector('dialog')` or `shadowRoot?.querySelector('dialog')` to call `showModal()` and `close()` methods.
 15. **ModusWcCard slot structure**: Use proper slot structure with `slot="header"`, `slot="title"`, `slot="actions"`, etc. for correct rendering and layout.
+16. **ModusWcNavbar hamburger menu with custom sidebar**: When implementing custom sidebars, keep the navbar hamburger visible but prevent the built-in blue dropdown menu from opening.
 
 ## Troubleshooting Quick Fixes
 
@@ -93,6 +119,81 @@ if (dialogElement && typeof dialogElement.showModal === 'function') {
   </div>
 </ModusWcCard>
 ```
+
+### ModusWcNavbar Hamburger Menu with Custom Sidebar
+**Problem**: When implementing custom sidebars, users want the hamburger menu visible but only want to toggle the custom sidebar, not the built-in blue dropdown menu
+**Solution**: Keep `mainMenu: true` in visibility but force close the built-in menu and toggle custom sidebar instead
+
+```tsx
+// CORRECT - Navbar with custom sidebar handling
+import React, { useRef, useEffect, useState } from 'react';
+import { ModusWcNavbar } from '@trimble-oss/moduswebcomponents-react';
+
+const NavbarWithCustomSidebar: React.FC = () => {
+  const [sideNavExpanded, setSideNavExpanded] = useState<boolean>(false);
+  const navbarRef = useRef<HTMLModusWcNavbarElement>(null);
+  
+  // Keep mainMenu: true to show hamburger button
+  const visibility = {
+    mainMenu: true,  // This shows the hamburger menu button
+    notifications: false,
+    search: false,
+    user: true,
+    help: false
+  };
+  
+  useEffect(() => {
+    const navbar = navbarRef.current;
+    
+    if (navbar) {
+      const handleMainMenuToggle = () => {
+        // Toggle our custom sidebar
+        setSideNavExpanded(prev => !prev);
+        
+        // Force close the navbar's built-in menu immediately
+        setTimeout(() => {
+          if (navbar) {
+            navbar.mainMenuOpen = false;
+          }
+        }, 0);
+      };
+      
+      navbar.addEventListener('mainMenuOpenChange', handleMainMenuToggle);
+      
+      return () => {
+        navbar.removeEventListener('mainMenuOpenChange', handleMainMenuToggle);
+      };
+    }
+  }, []);
+  
+  return (
+    <>
+      <ModusWcNavbar
+        ref={navbarRef}
+        userCard={userCard}
+        visibility={visibility}
+        mainMenuOpen={false} // Keep built-in menu closed
+      />
+      
+      {/* Custom Sidebar */}
+      <div style={{
+        width: sideNavExpanded ? '240px' : '64px',
+        transition: 'width 0.3s ease',
+        // ... other sidebar styles
+      }}>
+        {/* Custom sidebar content */}
+      </div>
+    </>
+  );
+};
+```
+
+**Key Points**:
+- Set `visibility.mainMenu: true` to show the hamburger button
+- Use `mainMenuOpen={false}` to keep the built-in menu closed
+- Listen to `mainMenuOpenChange` event to capture hamburger clicks
+- Toggle your custom sidebar state and immediately force close the built-in menu using `setTimeout`
+- This pattern allows you to use the navbar's hamburger button while implementing your own sidebar behavior
 
 ## Best Practice Examples
 ```tsx
